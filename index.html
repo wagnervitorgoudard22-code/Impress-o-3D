@@ -44,6 +44,10 @@ details summary{cursor:pointer;font-weight:700;color:var(--acc);font-size:16px}
 a.btn{display:inline-block;text-decoration:none;border:1px solid var(--acc);background:var(--acc);color:var(--card);padding:9px 14px;border-radius:8px;font-size:14px;font-weight:700}
 .cat{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:8px;margin-top:10px}
 .cat button{text-align:left;background:var(--inp);color:var(--ink);border:1px solid var(--line);font-weight:400;line-height:1.35}.cat button b{display:block;color:var(--acc)}.cat button small{color:var(--mut)}
+@page{margin:12mm}@media print{body *{visibility:hidden}#op,#op *{visibility:visible}#op{position:absolute;left:0;top:0;width:100%}}
+.tabs{display:flex;gap:8px;margin-bottom:12px}.tabs button{flex:1;background:transparent;color:var(--acc)}.tabs button.on{background:var(--acc);color:var(--card)}
+.bdg{display:inline-block;font-size:11px;padding:2px 8px;border-radius:10px;border:1px solid var(--gold);color:var(--gold);margin-left:6px;font-weight:700}
+.cc{border:1px solid var(--line);border-radius:10px;padding:10px;margin-bottom:8px;background:var(--card)}
 textarea{width:100%;height:90px;margin-top:8px;background:var(--inp);color:var(--ink);border:1px solid var(--line);border-radius:8px;padding:8px;font-size:12px}
 </style>
 </head>
@@ -52,6 +56,8 @@ textarea{width:100%;height:90px;margin-top:8px;background:var(--inp);color:var(-
 <div class="top"><div><h1>⚙️ Forja Tática 3D</h1><div class="sub">Digite peso e tempo da peça, o preço de venda sai na hora.</div></div>
 <button class="sec sm" id="theme">🌓 Tema</button></div>
 
+<div class="tabs"><button id="tb1" class="on">⚙️ Calculadora</button><button id="tb2">👥 Clientes</button></div>
+<div id="tabcalc">
 <div class="card">
 <h2>Catálogo de produtos prontos</h2>
 <div class="sub">Toque num produto: peso, tempo e extras já são preenchidos. Depois é só ajustar o filamento.</div>
@@ -82,18 +88,23 @@ textarea{width:100%;height:90px;margin-top:8px;background:var(--inp);color:var(-
 <div class="row"><button id="salvar">💾 Salvar produto</button><button class="sec" id="limpar">Limpar campos</button></div>
 </div>
 
-<div class="card">
+<div class="card" id="qcard">
 <h2>Orçamento para WhatsApp</h2>
 <div class="grid">
 <div><label>Nome do cliente</label><input id="cli" placeholder="Ex.: João"></div>
 <div><label>WhatsApp do cliente (com DDD, opcional)</label><input id="fone" inputmode="tel" placeholder="47 99999-9999"></div>
 <div><label>Cor / observações</label><input id="cor" placeholder="Ex.: verde militar"></div>
 <div><label>Prazo (dias úteis)</label><input id="prazo" type="number" min="1" value="3"></div>
+<div><label>Validade do orçamento (dias)</label><input id="val" type="number" min="1" value="7"></div>
+<div><label>Forma de pagamento</label><input id="pag" value="Pix"></div>
 </div>
-<div class="row"><button id="gerar">💬 Gerar orçamento (texto)</button><button class="sec" id="gimg">🖼️ Gerar imagem com foto</button></div>
+<div class="row"><button id="gerar">💬 Orçamento para o cliente (WhatsApp)</button><button id="gpdf">📄 Orçamento para o cliente (PDF)</button><button class="sec" id="gimg">🖼️ Cartão com foto (imagem)</button></div>
+<div id="pdfbox" style="display:none"><img id="pdfprev" alt="Prévia do PDF" style="max-width:100%;max-height:560px;border:1px solid var(--line);border-radius:8px;margin-top:10px"><div class="row"><button id="pdfshare">📤 Compartilhar PDF</button><a class="btn" id="pdfdl" download="orcamento.pdf">⬇️ Baixar PDF</a></div></div>
+<div class="row"><button id="gop" style="background:var(--gold);border-color:var(--gold)">🛠️ Orçamento + Ordem de produção (interno, com custos)</button></div>
+<div id="opbox" style="display:none;margin-top:12px"><div id="op"></div><div class="row"><button id="opcop">📋 Copiar texto</button><button class="sec" id="opprint">🖨️ Imprimir / salvar PDF</button></div><div class="note">Documento interno: mostra seus custos e lucro. Não envie ao cliente.</div></div>
 <div id="qimgbox" style="display:none"><img id="qimg" alt="Orçamento" style="max-width:100%;border-radius:10px;margin-top:10px"><div class="row"><button id="qshare">📤 Compartilhar</button><a class="btn" id="qdl" download="orcamento.png">Baixar imagem</a></div></div>
 <textarea id="qmsg" style="display:none;height:190px"></textarea>
-<div class="row" id="qbtn" style="display:none"><a class="btn" id="qwa" target="_blank" rel="noopener">Enviar pelo WhatsApp</a><button class="sec" id="qcop">Copiar texto</button></div>
+<div class="row" id="qbtn" style="display:none"><a class="btn" id="qwa" target="_blank" rel="noopener">Enviar pelo WhatsApp</a><button class="sec" id="qcop">Copiar texto</button><button class="sec" id="qpix">🔑 Copiar chave Pix</button></div>
 <div class="note">Usa o preço de venda direta e a quantidade do cálculo acima. Você pode editar o texto antes de enviar.</div>
 </div>
 
@@ -112,6 +123,9 @@ textarea{width:100%;height:90px;margin-top:8px;background:var(--inp);color:var(-
 <details>
 <summary>3. Configurações (energia, impressora, taxas, filamentos)</summary>
 <div class="grid" id="cfg" style="margin-top:12px"></div>
+<h2 style="margin-top:16px">Dados para pagamento (Pix)</h2>
+<div class="grid"><div><label>Tipo da chave</label><select id="pxt"><option>CPF</option><option>CNPJ</option><option>Celular</option><option>E-mail</option><option>Aleatória</option></select></div><div><label>Chave Pix</label><input id="pxk" placeholder="Digite sua chave Pix"></div><div><label>Nome do favorecido</label><input id="pxn" placeholder="Seu nome completo"></div><div><label>Banco</label><input id="pxb" placeholder="Ex.: Itaú"></div></div>
+<div class="note">Fica salvo só neste aparelho. Aparece no PDF e na mensagem do cliente quando a forma de pagamento for Pix.</div>
 <h2 style="margin-top:16px">Filamentos (preço do rolo de 1 kg)</h2>
 <div class="grid" id="filcfg"></div>
 <div class="row"><button class="sec sm" id="addfil">+ Adicionar filamento</button><button class="sec sm" id="reset">↺ Restaurar valores padrão</button></div>
@@ -122,6 +136,27 @@ textarea{width:100%;height:90px;margin-top:8px;background:var(--inp);color:var(-
 </details>
 </div>
 </div>
+<div id="tabcli" style="display:none">
+<div class="card"><h2>👥 Carteira de clientes</h2><div class="sub" id="stsync">Modo local</div>
+<div class="row"><button id="sincr">🔄 Sincronizar agora</button></div>
+<details style="margin-top:10px"><summary style="font-size:14px">⚙️ Configurar sincronização entre aparelhos (Google Planilhas)</summary>
+<div class="grid" style="margin-top:10px"><div><label>Endereço do Apps Script (termina em /exec)</label><input id="sy_url" placeholder="https://script.google.com/macros/s/.../exec"></div><div><label>Senha da carteira</label><input id="sy_pw" type="password" placeholder="A mesma que você pôs no script"></div></div>
+<div class="row"><button class="sec" id="sy_save">Salvar e testar</button></div>
+<div class="note">Cada aparelho (seu celular, seu PC, o da sua esposa) preenche estes dois campos uma vez. Os dados ficam numa planilha sua no Google Drive.</div></details></div>
+<div class="card"><div class="prices" id="cstats"></div></div>
+<div class="card"><h2 id="ctitle">Novo cliente</h2><div class="grid">
+<div><label>Nome *</label><input id="cn" placeholder="Nome do cliente"></div>
+<div><label>WhatsApp (com DDD)</label><input id="cw" inputmode="tel" placeholder="47 99999-9999"></div>
+<div><label>Cidade</label><input id="cc" placeholder="Joinville"></div>
+<div><label>Interesse / produto</label><input id="ci" placeholder="Ex.: caixa .40, chaveiros"></div>
+<div><label>Status</label><select id="cs"></select></div>
+<div><label>Total já comprado (R$)</label><input id="ct" type="number" min="0" step="0.01" value="0"></div>
+<div><label>Última compra</label><input id="cu" type="date"></div>
+<div><label>Observações</label><input id="co" placeholder="Cor preferida, endereço, etc."></div>
+</div><div class="row"><button id="csave">💾 Salvar cliente</button><button class="sec" id="ccancel" style="display:none">Cancelar edição</button></div></div>
+<div class="card"><h2>Meus clientes</h2><div class="grid"><div><label>Buscar</label><input id="cq" placeholder="Nome, telefone, cidade…"></div><div><label>Filtrar por status</label><select id="cf"></select></div></div><div id="clist" style="margin-top:12px"></div></div>
+</div>
+</div>
 
 <script>
 const DEF={cfg:{preco:4000,vida:5000,watts:100,kwh:0.89,mo:25,falha:8,margem:40,imp:4,ml:16,mlf:6.5,sp:20,spf:4,r90:false},
@@ -130,6 +165,8 @@ const LAB={preco:["Preço da impressora (R$)",1],vida:["Vida útil (horas)",1],w
 let S;
 try{S=JSON.parse(localStorage.getItem("ft3d")||"null")}catch(e){S=null}
 if(!S||!S.cfg||!S.fils)S=JSON.parse(JSON.stringify(DEF));
+S.pix=S.pix||{tipo:"CPF",chave:"",nome:"",banco:"Itaú"};
+S.cli=S.cli||[];S.sync=S.sync||{url:"",senha:"",last:0};
 const $=id=>document.getElementById(id),R=v=>"R$ "+(+v).toFixed(2).replace(".",",");
 function save(){try{localStorage.setItem("ft3d",JSON.stringify(S))}catch(e){alert("Memória do navegador cheia. Apague alguns produtos com foto.")}}
 const N=id=>Math.max(0,parseFloat($(id).value)||0);
@@ -152,7 +189,7 @@ $("brk").innerHTML=`<span>Custo total: <b>${R(r.custo)}</b></span><span>Material
 function selFil(){$("fil").innerHTML=S.fils.map((f,k)=>`<option value="${k}">${f.n} – ${R(f.p)}/kg</option>`).join("");}
 function cfgUI(){$("cfg").innerHTML=Object.keys(LAB).map(k=>`<div><label>${LAB[k][0]}</label><input data-k="${k}" type="number" min="0" step="${LAB[k][1]}" value="${S.cfg[k]}"></div>`).join("");
 $("filcfg").innerHTML=S.fils.map((f,k)=>`<div><label>Nome</label><input data-fn="${k}" value="${f.n}"><label style="margin-top:4px">Preço do rolo (R$)</label><input data-fp="${k}" type="number" min="0" step="1" value="${f.p}"><button class="sec sm" data-del="${k}" style="margin-top:4px">Remover</button></div>`).join("");
-$("r90").checked=S.cfg.r90;}
+$("r90").checked=S.cfg.r90;$("pxt").value=S.pix.tipo;$("pxk").value=S.pix.chave;$("pxn").value=S.pix.nome;$("pxb").value=S.pix.banco;}
 function lista(){const L=$("lista");L.innerHTML=S.prods.map((p,k)=>`<tr><td>${p.img?`<img src="${p.img}" style="height:28px;border-radius:4px;vertical-align:middle;margin-right:6px">`:""}${p.nome}</td><td>${R(p.r.custo)}</td><td><b>${R(p.r.dir)}</b></td><td>${R(p.r.ml)}</td><td>${R(p.r.sp)}</td><td>${R(p.r.lucro)}</td><td><button class="sec sm" data-load="${k}">Abrir</button> <button class="sec sm" data-rm="${k}">✕</button></td></tr>`).join("");
 $("vazio").style.display=S.prods.length?"none":"block";}
 function all(){selFil();render();lista();}
@@ -161,6 +198,7 @@ if(t.dataset.k){S.cfg[t.dataset.k]=parseFloat(t.value)||0;save();render();}
 else if(t.dataset.fn){S.fils[t.dataset.fn].n=t.value;save();const v=$("fil").value;selFil();$("fil").value=v;}
 else if(t.dataset.fp){S.fils[t.dataset.fp].p=parseFloat(t.value)||0;save();const v=$("fil").value;selFil();$("fil").value=v;render();}
 else if(t.id==="r90"){S.cfg.r90=t.checked;save();render();}
+else if(t.id&&t.id.startsWith("px")){S.pix={tipo:$("pxt").value,chave:$("pxk").value.trim(),nome:$("pxn").value.trim(),banco:$("pxb").value.trim()};save();}
 else if(t.closest(".card")&&!t.dataset.k)render();});
 document.addEventListener("click",e=>{const d=e.target.dataset;
 if(d.m){S.cfg.margem=+d.m;save();cfgUI();render();}
@@ -170,7 +208,7 @@ if(d.load!==undefined){const p=S.prods[+d.load];$("nome").value=p.nome;$("fil").
 $("salvar").onclick=()=>{const i=inp(),nome=$("nome").value.trim()||"Produto "+(S.prods.length+1);S.prods.push({nome,i,r:calc(i),img:curImg});save();lista();};
 $("limpar").onclick=()=>{curImg="";setPrev();["nome"].forEach(x=>$(x).value="");["g","h","m","pos","emb","ext"].forEach(x=>$(x).value=0);$("qtd").value=1;render();};
 $("addfil").onclick=()=>{S.fils.push({n:"Novo filamento",p:100});save();cfgUI();all();};
-$("reset").onclick=()=>{if(confirm("Restaurar todos os valores padrão? Os produtos salvos serão mantidos.")){const p=S.prods;S=JSON.parse(JSON.stringify(DEF));S.prods=p;save();cfgUI();all();}};
+$("reset").onclick=()=>{if(confirm("Restaurar todos os valores padrão? Os produtos salvos serão mantidos.")){const p=S.prods,px=S.pix,cl=S.cli,sy=S.sync;S=JSON.parse(JSON.stringify(DEF));S.prods=p;S.pix=px;S.cli=cl;S.sync=sy;save();cfgUI();all();}};
 $("apagar").onclick=()=>{if(S.prods.length&&confirm("Apagar todos os produtos salvos?")){S.prods=[];save();lista();}};
 $("copiar").onclick=async()=>{const rows=[["Produto","Custo","Venda direta","Mercado Livre","Shopee","Lucro direta"]].concat(S.prods.map(p=>[p.nome,p.r.custo,p.r.dir,p.r.ml,p.r.sp,p.r.lucro].map((v,k)=>k?(+v).toFixed(2).replace(".",","):v)));
 const tx=rows.map(r=>r.join("\t")).join("\n");let ok=false;try{await navigator.clipboard.writeText(tx);ok=true;}catch(e){}
@@ -198,8 +236,14 @@ document.addEventListener("click",e=>{const d=e.target.closest("button,a");if(!d
 if(D.f){CF=D.f;catUI();}
 if(D.cat!==undefined){const p=CAT[+D.cat];$("nome").value=p.n;$("g").value=p.g;$("h").value=Math.floor(p.h);$("m").value=Math.round((p.h%1)*60);$("pos").value=p.pos;$("emb").value=p.emb;$("ext").value=p.ext;$("qtd").value=1;curImg="";setPrev();render();$("calc").scrollIntoView({behavior:"smooth"});}});
 function updWA(){const t=$("qmsg").value;let f=$("fone").value.replace(/\D/g,"");if(f.length>=10&&f.length<=11)f="55"+f;$("qwa").href="https://wa.me/"+f+"?text="+encodeURIComponent(t);}
-$("gerar").onclick=()=>{const i=inp(),r=calc(i),q=i.q,nome=$("nome").value.trim()||"Produto",cl=$("cli").value.trim(),cor=$("cor").value.trim(),pz=$("prazo").value||"3";
-const L=["Olá"+(cl?", "+cl:"")+"! Segue o seu orçamento da Forja Tática 3D:","","📦 "+nome,"Quantidade: "+q+(cor?"\nCor/observações: "+cor:""),"Valor unitário: "+R(r.dir),"💰 Total: "+R(r.dir*q),"⏱️ Prazo: "+pz+" dias úteis","","Pagamento via Pix. Posso confirmar o seu pedido?"];
+$("gerar").onclick=()=>{const i=inp(),r=calc(i),q=i.q,nome=$("nome").value.trim()||"Produto",cl=$("cli").value.trim(),cor=$("cor").value.trim(),pz=$("prazo").value||"3",val=$("val").value||"7",pag=$("pag").value.trim()||"Pix";
+const hr=new Date().getHours(),sd=hr<12?"Bom dia":hr<18?"Boa tarde":"Boa noite";
+const L=[sd+(cl?", "+cl:"")+"! 👋","","Muito obrigado pelo interesse! Aqui é da *Forja Tática 3D* e preparei o seu orçamento com todo o cuidado:","",
+"📦 *Produto:* "+nome].concat(cor?["🎨 *Cor/personalização:* "+cor]:[],[
+"🔢 *Quantidade:* "+q,"💵 *Valor unitário:* "+R(r.dir),"💰 *TOTAL: "+R(r.dir*q)+"*","",
+"🛠️ *Produção:* peça impressa em 3D sob encomenda, com acabamento caprichado.","⏱️ *Prazo:* "+pz+" dias úteis após a confirmação do pedido.","💳 *Pagamento:* "+pag,...pixLines(pag),"📅 *Validade deste orçamento:* "+val+" dias","",
+"Quer ajustar cor, tamanho ou algum detalhe da personalização? É só me avisar que eu adapto para você 😉","",
+"Estando tudo certo, é só responder *“CONFIRMO”* que já coloco o seu pedido na fila de produção! 🚀","","Forja Tática 3D 🪖","Impressão 3D com a sua cara"]);
 $("qmsg").value=L.join("\n");$("qmsg").style.display="block";$("qbtn").style.display="flex";updWA();};
 $("qmsg").addEventListener("input",updWA);$("fone").addEventListener("input",updWA);
 $("qcop").onclick=async()=>{const t=$("qmsg");try{await navigator.clipboard.writeText(t.value);alert("Texto copiado!");}catch(e){t.select();}};
@@ -242,8 +286,130 @@ $("gpag").onclick=()=>{if(!S.prods.length){alert("Salve ao menos um produto ante
 const it=S.prods.map(p=>({n:p.nome,p:+(+p.r.dir).toFixed(2),i:p.img||""}));
 const h=PAGE.replace("__ITEMS__",()=>JSON.stringify(it).replace(/</g,"\\u003c"));
 const a=document.createElement("a");a.href=URL.createObjectURL(new Blob([h],{type:"text/html"}));a.download="pedido.html";document.body.appendChild(a);a.click();a.remove();};
+
+const esc=t=>String(t).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const hm=t=>{let h=Math.floor(t),m=Math.round((t-h)*60);if(m===60){h++;m=0;}return h+"h"+String(m).padStart(2,"0")+"min";};
+function bizDate(n){const d=new Date();let k=0;while(k<n){d.setDate(d.getDate()+1);if(d.getDay()!==0&&d.getDay()!==6)k++;}return d.toLocaleDateString("pt-BR");}
+let lastOP="";
+$("gop").onclick=()=>{const i=inp(),r=calc(i),q=i.q,nome=$("nome").value.trim()||"Produto",cl=$("cli").value.trim()||"—",cor=$("cor").value.trim()||"—",pz=parseInt($("prazo").value)||3;
+const fil=(S.fils[i.fil]||{n:"—"}).n,now=new Date(),num="OP-"+now.toISOString().slice(0,10).replace(/-/g,"")+"-"+String(now.getHours()).padStart(2,"0")+String(now.getMinutes()).padStart(2,"0");
+const dt=now.toLocaleDateString("pt-BR"),ent=bizDate(pz),pesoT=(i.g*q).toFixed(0),tempoT=hm(i.t*q);
+const venda=r.dir*q,custoT=r.custo*q,lucroT=r.lucro*q,mg=venda>0?(r.lucro/r.dir*100):0;
+const ln=[["Material ("+fil+")",r.mat],["Energia",r.en],["Desgaste da impressora",r.des],["Mão de obra (acabamento/embalagem)",r.mo],["Reserva para falhas",r.fal],["Embalagem + extras",i.emb+i.ext]];
+const check=["Fatiar e conferir peso/tempo","Separar filamento ("+fil+", ~"+pesoT+" g)","Imprimir ("+tempoT+" no total)","Acabamento / limpeza","Conferir qualidade","Embalar","Entregar / enviar"];
+const row=(a,b,bd)=>'<tr><td style="padding:5px 8px;border-bottom:1px solid #ddd;'+(bd?'font-weight:700':'')+'">'+a+'</td><td style="padding:5px 8px;border-bottom:1px solid #ddd;text-align:right;'+(bd?'font-weight:700':'')+'">'+b+'</td></tr>';
+const th=t=>'<div style="background:#3e4a33;color:#fff;padding:6px 10px;margin-top:14px;font-weight:700;font-size:13px">'+t+'</div>';
+$("op").innerHTML='<div style="background:#fff;color:#111;font-family:Arial,sans-serif;padding:18px;border:1px solid #bbb;border-radius:10px;font-size:14px">'
++'<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px"><div><div style="font-size:20px;font-weight:700;color:#3e4a33">FORJA TÁTICA 3D</div><div style="font-size:15px;font-weight:700">ORDEM DE PRODUÇÃO + ORÇAMENTO</div></div><div style="text-align:right;font-size:12px">Nº '+num+'<br>Data: '+dt+'<br>Entrega prevista: <b>'+ent+'</b></div></div>'
++(curImg?'<img src="'+curImg+'" style="max-height:110px;border-radius:8px;margin-top:10px">':'')
++th("PEDIDO")+'<table style="width:100%;border-collapse:collapse">'+row("Cliente",esc(cl))+row("Produto",esc(nome))+row("Quantidade",q)+row("Filamento",esc(fil))+row("Cor / observações",esc(cor))+row("Peso total estimado",pesoT+" g")+row("Tempo total de impressão",tempoT)+'</table>'
++th("CUSTOS (por peça)")+'<table style="width:100%;border-collapse:collapse">'+ln.map(x=>row(x[0],R(x[1]))).join("")+row("CUSTO TOTAL POR PEÇA",R(r.custo),1)+'</table>'
++th("VALORES DO LOTE ("+q+" "+(q>1?"peças":"peça")+")")+'<table style="width:100%;border-collapse:collapse">'+row("Custo total do lote",R(custoT))+row("Preço cobrado do cliente (por peça)",R(r.dir))+row("TOTAL A COBRAR",R(venda),1)+row("Lucro líquido do lote (após imposto/reserva)",R(lucroT),1)+row("Margem real sobre a venda",mg.toFixed(1).replace(".",",")+"%")+'</table>'
++'<div style="font-size:12px;color:#555;margin-top:6px">Se vender por marketplace: Mercado Livre '+R(r.ml)+' · Shopee '+R(r.sp)+' (por peça).</div>'
++th("CHECKLIST DE PRODUÇÃO")+'<div style="margin-top:6px;line-height:1.9">'+check.map(c=>"☐ "+esc(c)).join("<br>")+'</div></div>';
+lastOP=["ORDEM DE PRODUÇÃO + ORÇAMENTO – Forja Tática 3D","Nº "+num+" | Data: "+dt+" | Entrega prevista: "+ent,"","PEDIDO","Cliente: "+cl,"Produto: "+nome,"Quantidade: "+q,"Filamento: "+fil,"Cor/obs.: "+cor,"Peso total: "+pesoT+" g","Tempo total de impressão: "+tempoT,"","CUSTOS (por peça)"].concat(ln.map(x=>x[0]+": "+R(x[1])),["CUSTO TOTAL POR PEÇA: "+R(r.custo),"","LOTE ("+q+")","Custo total: "+R(custoT),"Preço por peça: "+R(r.dir),"TOTAL A COBRAR: "+R(venda),"Lucro líquido: "+R(lucroT)+" (margem real "+mg.toFixed(1).replace(".",",")+"%)","","CHECKLIST"],check.map(c=>"[ ] "+c)).join("\n");
+$("opbox").style.display="block";$("opbox").scrollIntoView({behavior:"smooth"});};
+$("opcop").onclick=async()=>{try{await navigator.clipboard.writeText(lastOP);alert("Ordem de produção copiada!");}catch(e){prompt("Copie o texto abaixo:",lastOP);}};
+$("opprint").onclick=()=>window.print();
+
+function makePDF(jpg,w,h){const enc=t=>new TextEncoder().encode(t),parts=[],offs=[];let len=0;const add=b=>{parts.push(b);len+=b.length;};
+add(enc("%PDF-1.4\n"));offs[1]=len;add(enc("1 0 obj<</Type/Catalog/Pages 2 0 R>>endobj\n"));
+offs[2]=len;add(enc("2 0 obj<</Type/Pages/Kids[3 0 R]/Count 1>>endobj\n"));
+offs[3]=len;add(enc("3 0 obj<</Type/Page/Parent 2 0 R/MediaBox[0 0 595 842]/Resources<</XObject<</Im0 4 0 R>>>>/Contents 5 0 R>>endobj\n"));
+offs[4]=len;add(enc("4 0 obj<</Type/XObject/Subtype/Image/Width "+w+"/Height "+h+"/ColorSpace/DeviceRGB/BitsPerComponent 8/Filter/DCTDecode/Length "+jpg.length+">>stream\n"));add(jpg);add(enc("\nendstream endobj\n"));
+const c="q 595 0 0 842 0 0 cm /Im0 Do Q";offs[5]=len;add(enc("5 0 obj<</Length "+c.length+">>stream\n"+c+"\nendstream endobj\n"));
+const xs=len;let x="xref\n0 6\n0000000000 65535 f \n";for(let k=1;k<=5;k++)x+=String(offs[k]).padStart(10,"0")+" 00000 n \n";
+x+="trailer<</Size 6/Root 1 0 R>>\nstartxref\n"+xs+"\n%%EOF";add(enc(x));return new Blob(parts,{type:"application/pdf"});}
+let lastPDF=null;
+$("gpdf").onclick=async()=>{const i=inp(),r=calc(i),q=i.q,nome=$("nome").value.trim()||"Produto",cl=$("cli").value.trim(),fone=$("fone").value.trim(),cor=$("cor").value.trim(),pz=parseInt($("prazo").value)||3,val=parseInt($("val").value)||7,pag=$("pag").value.trim()||"Pix";
+const now=new Date(),dt=now.toLocaleDateString("pt-BR"),vd=new Date(now.getTime()+val*864e5).toLocaleDateString("pt-BR"),num="OR-"+now.toISOString().slice(0,10).replace(/-/g,"")+"-"+String(now.getHours()).padStart(2,"0")+String(now.getMinutes()).padStart(2,"0");
+const cv=document.createElement("canvas");cv.width=1588;cv.height=2246;const x=cv.getContext("2d");x.scale(2,2);x.fillStyle="#fff";x.fillRect(0,0,794,1123);
+const T=(t,px,py,sz,col,b,al)=>{x.font=(b?"bold ":"")+sz+"px Arial";x.fillStyle=col;x.textAlign=al||"left";x.textBaseline="alphabetic";x.fillText(t,px,py);};
+const WR=(t,px,py,mw,lh,sz,col,b)=>{let l="",y=py;for(const w of t.split(" ")){const u=l?l+" "+w:w;x.font=(b?"bold ":"")+sz+"px Arial";if(x.measureText(u).width>mw&&l){T(l,px,y,sz,col,b);y+=lh;l=w;}else l=u;}T(l,px,y,sz,col,b);return y+lh;};
+const RR=(a,b,c,d,rd)=>{x.beginPath();if(x.roundRect)x.roundRect(a,b,c,d,rd);else x.rect(a,b,c,d);};
+x.fillStyle="#2f3a28";x.fillRect(0,0,794,112);x.fillStyle="#c9b57a";x.fillRect(0,112,794,5);
+T("FORJA TÁTICA 3D",40,58,28,"#e8e2cc",1);T("Impressão 3D sob encomenda",40,84,14,"#c9b57a");
+T("ORÇAMENTO",754,52,26,"#c9b57a",1,"right");T("Nº "+num,754,76,13,"#e8e2cc",0,"right");T("Emitido em "+dt,754,96,13,"#e8e2cc",0,"right");
+x.fillStyle="#f4f1e6";RR(40,140,714,92,10);x.fill();
+T("CLIENTE",58,165,11,"#7a806f",1);T(cl||"—",58,192,20,"#1f261b",1);if(fone)T("WhatsApp: "+fone,58,214,13,"#555");
+T("VALIDADE DO ORÇAMENTO",736,165,11,"#7a806f",1,"right");T(vd,736,192,20,"#1f261b",1,"right");T("Prazo de produção: "+pz+" dias úteis",736,214,13,"#555",0,"right");
+x.fillStyle="#3e4a33";x.fillRect(40,262,714,34);
+T("PRODUTO",52,284,12,"#fff",1);T("QTD",480,284,12,"#fff",1,"center");T("VALOR UNIT.",620,284,12,"#fff",1,"right");T("TOTAL",742,284,12,"#fff",1,"right");
+const yb=WR(nome,52,330,340,22,17,"#1f261b",1);
+T(String(q),480,330,17,"#1f261b",0,"center");T(R(r.dir),620,330,16,"#1f261b",0,"right");T(R(r.dir*q),742,330,16,"#1f261b",1,"right");
+const ry=Math.max(yb,350);x.fillStyle="#ddd";x.fillRect(40,ry,714,1.5);
+let y=ry+34,dx=52;
+if(curImg){const im=await loadImg(curImg),k=Math.min(340/im.width,260/im.height),w=im.width*k,h=im.height*k;x.strokeStyle="#c9b57a";x.lineWidth=3;x.strokeRect(52,y,w,h);x.drawImage(im,52,y,w,h);dx=52+w+36;}
+T("DETALHES DO PEDIDO",dx,y+14,12,"#7a806f",1);let dy=y+42;
+dy=WR("Cor / personalização: "+(cor||"a combinar"),dx,dy,754-dx-12,20,15,"#1f261b",0);
+dy=WR("Quantidade: "+q+(q>1?" unidades":" unidade"),dx,dy,754-dx-12,20,15,"#1f261b",0);
+dy=WR("Produção sob encomenda, com acabamento caprichado.",dx,dy,754-dx-12,20,15,"#1f261b",0);
+y=Math.max(y+(curImg?270:0),dy)+20;
+x.fillStyle="#2f3a28";RR(404,y,350,96,12);x.fill();T("TOTAL A PAGAR",424,y+32,13,"#c9b57a",1);T(R(r.dir*q),734,y+76,34,"#e8e2cc",1,"right");
+const px=S.pix;if(px.chave&&/pix/i.test(pag)){x.fillStyle="#f4f1e6";RR(40,y,350,96,12);x.fill();x.strokeStyle="#c9b57a";x.lineWidth=2;RR(40,y,350,96,12);x.stroke();T("PAGAMENTO VIA PIX",56,y+24,12,"#7a806f",1);T(px.chave,56,y+50,17,"#1f261b",1);T("Chave "+px.tipo+(px.banco?" · "+px.banco:""),56,y+70,12,"#555");if(px.nome)T("Favorecido: "+px.nome,56,y+86,12,"#555");}
+y+=146;x.fillStyle="#3e4a33";x.fillRect(40,y,714,28);T("CONDIÇÕES",52,y+19,12,"#fff",1);y+=56;
+for(const c of["Forma de pagamento: "+pag+".","Prazo de produção: "+pz+" dias úteis, contados a partir da confirmação do pedido.","Orçamento válido até "+vd+".","Produto impresso em 3D sob encomenda: pequenas variações de textura e tom de cor são normais do processo."]){T("•",52,y,15,"#c9b57a",1);y=WR(c,70,y,670,21,14,"#1f261b",0)+6;}
+x.fillStyle="#c9b57a";x.fillRect(40,1048,714,2);T("Forja Tática 3D  ·  Impressão 3D",397,1078,14,"#3e4a33",1,"center");T("Obrigado pela preferência!",397,1100,12,"#7a806f",0,"center");
+const du=cv.toDataURL("image/jpeg",.92),bs=atob(du.split(",")[1]),u=new Uint8Array(bs.length);for(let k=0;k<bs.length;k++)u[k]=bs.charCodeAt(k);
+lastPDF=makePDF(u,cv.width,cv.height);$("pdfprev").src=du;$("pdfdl").href=URL.createObjectURL(lastPDF);$("pdfdl").download="orcamento-"+num+".pdf";$("pdfbox").style.display="block";$("pdfbox").scrollIntoView({behavior:"smooth"});};
+$("pdfshare").onclick=async()=>{if(!lastPDF)return;const f=new File([lastPDF],"orcamento.pdf",{type:"application/pdf"});
+if(navigator.canShare&&navigator.canShare({files:[f]})){try{await navigator.share({files:[f],text:"Orçamento Forja Tática 3D"});}catch(e){}}else alert("Este aparelho não compartilha direto daqui. Toque em “Baixar PDF” e envie pelo WhatsApp.");};
+
+function pixLines(pag){const x=S.pix;if(!x.chave||!/pix/i.test(pag))return[];return["🔑 *Chave Pix ("+x.tipo+"):* "+x.chave].concat(x.nome?["👤 *Favorecido:* "+x.nome+(x.banco?" ("+x.banco+")":"")]:(x.banco?["🏦 *Banco:* "+x.banco]:[]));}
+$("qpix").onclick=async()=>{const k=S.pix.chave;if(!k){alert("Cadastre sua chave Pix em Configurações.");return;}try{await navigator.clipboard.writeText(k);alert("Chave Pix copiada! Cole na conversa com o cliente.");}catch(e){prompt("Copie a chave:",k);}};
+
+const STS=["Novo contato","Orçamento enviado","Em produção","Cliente","Sem retorno"];
+const nid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,6);
+let editId=null,syncing=false,st2=null;
+function showTab(n){$("tabcalc").style.display=n===1?"block":"none";$("tabcli").style.display=n===2?"block":"none";$("tb1").className=n===1?"on":"";$("tb2").className=n===2?"on":"";if(n===2){listaCli();syncNow();}}
+$("tb1").onclick=()=>showTab(1);$("tb2").onclick=()=>showTab(2);
+$("cs").innerHTML=STS.map(x=>"<option>"+x+"</option>").join("");
+$("cf").innerHTML="<option>Todos</option>"+STS.map(x=>"<option>"+x+"</option>").join("");
+const setSt=t=>{$("stsync").textContent=t;};
+const hh=()=>new Date().toLocaleTimeString("pt-BR",{hour:"2-digit",minute:"2-digit"});
+function mergeCli(loc,rem){const m={};loc.forEach(r=>m[r.id]=r);rem.forEach(r=>{const l=m[r.id];if(!l||(+r.atualizado||0)>(+l.atualizado||0))m[r.id]=r;});return Object.values(m);}
+async function syncNow(){const c=S.sync;if(!c.url||!c.senha){setSt("📱 Modo local: os clientes ficam só neste aparelho. Configure a sincronização para dividir com sua sócia.");return;}
+if(syncing)return;syncing=true;setSt("Sincronizando…");
+try{const r=await fetch(c.url,{method:"POST",headers:{"Content-Type":"text/plain;charset=utf-8"},body:JSON.stringify({senha:c.senha,records:S.cli})});const j=await r.json();if(!j.ok)throw new Error(j.erro==="senha"?"senha incorreta":"erro no script");
+S.cli=mergeCli(S.cli,j.records);S.sync.last=Date.now();save();listaCli();setSt("✅ Sincronizado às "+hh());}
+catch(e){setSt("⚠️ Não sincronizou ("+(e.message||"sem conexão")+"). Suas alterações estão salvas neste aparelho e serão enviadas depois.");}
+syncing=false;}
+const schedSync=()=>{clearTimeout(st2);st2=setTimeout(syncNow,800);};
+$("sincr").onclick=syncNow;
+$("sy_url").value=S.sync.url;$("sy_pw").value=S.sync.senha;
+$("sy_save").onclick=()=>{S.sync.url=$("sy_url").value.trim();S.sync.senha=$("sy_pw").value;save();syncNow();};
+setInterval(()=>{if(!document.hidden&&$("tabcli").style.display!=="none")syncNow();},30000);
+document.addEventListener("visibilitychange",()=>{if(!document.hidden&&$("tabcli").style.display!=="none")syncNow();});
+const dig=t=>String(t||"").replace(/\D/g,"");
+const waLink=t=>{let f=dig(t);if(f.length>=10&&f.length<=11)f="55"+f;return f?"https://wa.me/"+f:"";};
+const fdate=d=>d?d.split("-").reverse().join("/"):"—";
+function clearForm(){editId=null;["cn","cw","cc","ci","co","cu"].forEach(i=>$(i).value="");$("ct").value=0;$("cs").value=STS[0];$("ctitle").textContent="Novo cliente";$("ccancel").style.display="none";}
+$("ccancel").onclick=clearForm;
+$("csave").onclick=()=>{const nome=$("cn").value.trim();if(!nome){alert("Digite o nome do cliente.");return;}
+const now=Date.now(),ex=S.cli.find(c=>c.id===editId);
+const rec={id:editId||nid(),nome,whatsapp:$("cw").value.trim(),cidade:$("cc").value.trim(),interesse:$("ci").value.trim(),status:$("cs").value,total:parseFloat($("ct").value)||0,ultima:$("cu").value,obs:$("co").value.trim(),criado:ex?ex.criado:now,atualizado:now,apagado:false};
+if(ex)Object.assign(ex,rec);else S.cli.push(rec);save();clearForm();listaCli();schedSync();};
+function listaCli(){const act=S.cli.filter(c=>!c.apagado);
+const sum=act.reduce((a,c)=>a+(+c.total||0),0),buy=act.filter(c=>c.total>0).length;
+$("cstats").innerHTML='<div class="p"><small>👥 CLIENTES</small><b style="font-size:28px">'+act.length+'</b><small>'+act.filter(c=>c.status==="Cliente").length+' já compraram</small></div><div class="p"><small>💰 TOTAL VENDIDO</small><b style="font-size:28px">'+R(sum)+'</b></div><div class="p"><small>🧾 TICKET MÉDIO</small><b style="font-size:28px">'+R(buy?sum/buy:0)+'</b></div>';
+const q=$("cq").value.trim().toLowerCase(),f=$("cf").value;
+const L=act.filter(c=>(f==="Todos"||c.status===f)&&(!q||[c.nome,c.whatsapp,c.cidade,c.interesse,c.obs].join(" ").toLowerCase().includes(q))).sort((a,b)=>(+b.atualizado||0)-(+a.atualizado||0));
+$("clist").innerHTML=L.length?L.map(c=>{const w=waLink(c.whatsapp);return '<div class="cc"><b>'+esc(c.nome)+'</b><span class="bdg">'+esc(c.status)+'</span>'
++'<div class="note" style="margin-top:4px">'+(c.whatsapp?"📞 "+esc(c.whatsapp):"")+(c.cidade?" · 📍 "+esc(c.cidade):"")+'</div>'
++(c.interesse?'<div class="note">Interesse: '+esc(c.interesse)+'</div>':"")
++'<div class="note">Total comprado: <b>'+R(c.total||0)+'</b> · Última compra: '+fdate(c.ultima)+'</div>'
++(c.obs?'<div class="note">📝 '+esc(c.obs)+'</div>':"")
++'<div class="row">'+(w?'<a class="btn" style="padding:6px 10px;font-size:12px" target="_blank" rel="noopener" href="'+w+'">💬 WhatsApp</a>':"")
++'<button class="sec sm" data-cact="orc" data-id="'+c.id+'">🧾 Orçamento</button><button class="sec sm" data-cact="ven" data-id="'+c.id+'">💰 Registrar venda</button><button class="sec sm" data-cact="ed" data-id="'+c.id+'">✏️ Editar</button><button class="sec sm" data-cact="del" data-id="'+c.id+'">🗑️</button></div></div>';}).join(""):'<div class="note">'+(act.length?"Nenhum cliente encontrado.":"Nenhum cliente ainda. Cadastre o primeiro acima.")+'</div>';}
+$("cq").addEventListener("input",listaCli);$("cf").addEventListener("change",listaCli);
+document.addEventListener("click",e=>{const b=e.target.closest("button[data-cact]");if(!b)return;const c=S.cli.find(x=>x.id===b.dataset.id);if(!c)return;const a=b.dataset.cact;
+if(a==="ed"){editId=c.id;$("cn").value=c.nome;$("cw").value=c.whatsapp||"";$("cc").value=c.cidade||"";$("ci").value=c.interesse||"";$("cs").value=c.status;$("ct").value=c.total||0;$("cu").value=c.ultima||"";$("co").value=c.obs||"";$("ctitle").textContent="Editando: "+c.nome;$("ccancel").style.display="inline-block";$("ctitle").scrollIntoView({behavior:"smooth"});}
+if(a==="del"&&confirm("Apagar "+c.nome+" da carteira? Isso vale para todos os aparelhos.")){c.apagado=true;c.atualizado=Date.now();save();listaCli();schedSync();}
+if(a==="ven"){const v=parseFloat(String(prompt("Valor da venda para "+c.nome+" (R$):","")||"").replace(",","."));if(v>0){c.total=(+c.total||0)+v;c.ultima=new Date().toISOString().slice(0,10);c.status="Cliente";c.atualizado=Date.now();save();listaCli();schedSync();}}
+if(a==="orc"){showTab(1);$("cli").value=c.nome;$("fone").value=c.whatsapp||"";$("qcard").scrollIntoView({behavior:"smooth"});}});
 catUI();
 cfgUI();all();
+if(S.sync.url&&S.sync.senha)setTimeout(syncNow,600);
 if("serviceWorker" in navigator&&location.protocol.startsWith("http"))navigator.serviceWorker.register("sw.js").catch(()=>{});
 </script>
 </body>
