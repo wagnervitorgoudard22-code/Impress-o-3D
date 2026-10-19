@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#3e4a33">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icon-180.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Forja 3D">
+<title>Forja Tática 3D – Calculadora de Preço</title>
+<style>
+:root{--bg:#f2f0e6;--card:#fff;--ink:#1f261b;--mut:#5d6657;--line:#d6d2bf;--acc:#3e4a33;--gold:#8a7430;--inp:#fffbe6;--ok:#2e6b2e;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#161a14;--card:#20261c;--ink:#ece7d2;--mut:#a8b09c;--line:#39422f;--acc:#c9b57a;--gold:#c9b57a;--inp:#2b3325;--ok:#8fd18f}}
+:root[data-theme="dark"]{--bg:#161a14;--card:#20261c;--ink:#ece7d2;--mut:#a8b09c;--line:#39422f;--acc:#c9b57a;--gold:#c9b57a;--inp:#2b3325;--ok:#8fd18f}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:Arial,Helvetica,sans-serif;font-size:15px}
+.wrap{max-width:980px;margin:0 auto;padding:16px}
+h1{font-size:22px;margin:0}h2{font-size:16px;margin:0 0 10px;color:var(--acc)}
+.top{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:12px}
+.sub{color:var(--mut);font-size:13px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px;margin-bottom:14px}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px}
+label{display:block;font-size:12px;color:var(--mut);margin-bottom:3px}
+input,select{width:100%;padding:9px;border:1px solid var(--line);border-radius:8px;background:var(--inp);color:var(--ink);font-size:15px;font-family:inherit}
+button{cursor:pointer;border:1px solid var(--acc);background:var(--acc);color:var(--card);padding:9px 14px;border-radius:8px;font-size:14px;font-weight:700;font-family:inherit}
+button.sec{background:transparent;color:var(--acc)}button.sm{padding:5px 9px;font-size:12px}
+.row{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-top:10px}
+.prices{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px;margin-top:6px}
+.p{border:2px solid var(--line);border-radius:12px;padding:12px;text-align:center}
+.p.main{border-color:var(--gold)}
+.p small{display:block;color:var(--mut);font-size:12px}
+.p b{display:block;font-size:30px;margin:4px 0}.p.main b{color:var(--ok);font-size:36px}
+.brk{display:flex;flex-wrap:wrap;gap:6px 16px;margin-top:12px;font-size:13px;color:var(--mut)}
+.brk span b{color:var(--ink)}
+.scroll{overflow-x:auto}table{border-collapse:collapse;width:100%;font-size:13px;min-width:640px}
+th,td{padding:7px 6px;border-bottom:1px solid var(--line);text-align:right}th:first-child,td:first-child{text-align:left}
+th{color:var(--mut);font-weight:700}
+details summary{cursor:pointer;font-weight:700;color:var(--acc);font-size:16px}
+.chk{display:flex;gap:6px;align-items:center;font-size:13px;color:var(--mut)}.chk input{width:auto}
+.note{font-size:12px;color:var(--mut);margin-top:8px;line-height:1.45}
+a.btn{display:inline-block;text-decoration:none;border:1px solid var(--acc);background:var(--acc);color:var(--card);padding:9px 14px;border-radius:8px;font-size:14px;font-weight:700}
+.cat{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:8px;margin-top:10px}
+.cat button{text-align:left;background:var(--inp);color:var(--ink);border:1px solid var(--line);font-weight:400;line-height:1.35}.cat button b{display:block;color:var(--acc)}.cat button small{color:var(--mut)}
+textarea{width:100%;height:90px;margin-top:8px;background:var(--inp);color:var(--ink);border:1px solid var(--line);border-radius:8px;padding:8px;font-size:12px}
+</style>
+</head>
+<body>
+<div class="wrap">
+<div class="top"><div><h1>⚙️ Forja Tática 3D</h1><div class="sub">Digite peso e tempo da peça, o preço de venda sai na hora.</div></div>
+<button class="sec sm" id="theme">🌓 Tema</button></div>
+
+<div class="card">
+<h2>Catálogo de produtos prontos</h2>
+<div class="sub">Toque num produto: peso, tempo e extras já são preenchidos. Depois é só ajustar o filamento.</div>
+<div class="row"><button class="sec sm" data-f="Todos">Todos</button><button class="sec sm" data-f="Geral">Geral</button><button class="sec sm" data-f="Militar">Militar</button></div>
+<div class="cat" id="cat"></div>
+<div class="note">Peso e tempo são estimativas médias. Fatie o seu modelo no Bambu Studio e corrija os números para ficar exato.</div>
+</div>
+
+<div class="card" id="calc">
+<h2>1. Calcular preço</h2>
+<div class="grid">
+<div><label>Nome do produto</label><input id="nome" placeholder="Ex.: Chaveiro tag militar"></div>
+<div><label>Filamento</label><select id="fil"></select></div>
+<div><label>Peso da peça (g) – do fatiador</label><input id="g" type="number" min="0" step="0.1" value="30"></div>
+<div><label>Tempo: horas</label><input id="h" type="number" min="0" step="1" value="2"></div>
+<div><label>Tempo: minutos</label><input id="m" type="number" min="0" max="59" step="1" value="30"></div>
+<div><label>Acabamento + embalagem (min)</label><input id="pos" type="number" min="0" step="1" value="10"></div>
+<div><label>Caixa/embalagem (R$)</label><input id="emb" type="number" min="0" step="0.1" value="1.2"></div>
+<div><label>Extras: ímã, argola, tinta (R$)</label><input id="ext" type="number" min="0" step="0.1" value="0"></div>
+<div><label>Quantidade (lote)</label><input id="qtd" type="number" min="1" step="1" value="1"></div>
+<div><label>📷 Foto do produto (opcional)</label><input id="foto" type="file" accept="image/*"><img id="prev" alt="" style="display:none;max-height:80px;border-radius:8px;margin-top:6px"></div>
+</div>
+<div class="row"><span class="sub">Margem rápida:</span>
+<button class="sec sm" data-m="30">30%</button><button class="sec sm" data-m="40">40%</button><button class="sec sm" data-m="50">50%</button><button class="sec sm" data-m="60">60%</button>
+<label class="chk"><input type="checkbox" id="r90"> Arredondar para ,90</label></div>
+<div class="prices" id="out" style="margin-top:14px"></div>
+<div class="brk" id="brk"></div>
+<div class="row"><button id="salvar">💾 Salvar produto</button><button class="sec" id="limpar">Limpar campos</button></div>
+</div>
+
+<div class="card">
+<h2>Orçamento para WhatsApp</h2>
+<div class="grid">
+<div><label>Nome do cliente</label><input id="cli" placeholder="Ex.: João"></div>
+<div><label>WhatsApp do cliente (com DDD, opcional)</label><input id="fone" inputmode="tel" placeholder="47 99999-9999"></div>
+<div><label>Cor / observações</label><input id="cor" placeholder="Ex.: verde militar"></div>
+<div><label>Prazo (dias úteis)</label><input id="prazo" type="number" min="1" value="3"></div>
+</div>
+<div class="row"><button id="gerar">💬 Gerar orçamento (texto)</button><button class="sec" id="gimg">🖼️ Gerar imagem com foto</button></div>
+<div id="qimgbox" style="display:none"><img id="qimg" alt="Orçamento" style="max-width:100%;border-radius:10px;margin-top:10px"><div class="row"><button id="qshare">📤 Compartilhar</button><a class="btn" id="qdl" download="orcamento.png">Baixar imagem</a></div></div>
+<textarea id="qmsg" style="display:none;height:190px"></textarea>
+<div class="row" id="qbtn" style="display:none"><a class="btn" id="qwa" target="_blank" rel="noopener">Enviar pelo WhatsApp</a><button class="sec" id="qcop">Copiar texto</button></div>
+<div class="note">Usa o preço de venda direta e a quantidade do cálculo acima. Você pode editar o texto antes de enviar.</div>
+</div>
+
+<div class="card">
+<h2>2. Meus produtos salvos</h2>
+<div class="scroll"><table><thead><tr><th>Produto</th><th>Custo</th><th>Venda direta</th><th>Mercado Livre</th><th>Shopee</th><th>Lucro direta</th><th></th></tr></thead><tbody id="lista"></tbody></table></div>
+<div id="vazio" class="note">Nenhum produto salvo ainda.</div>
+<div class="row"><button class="sec" id="copiar">📋 Copiar tabela (colar no Google Sheets/Drive)</button><button class="sec" id="apagar">🗑️ Apagar todos</button></div>
+<div class="row"><button id="gpag">🌐 Gerar página de pedidos para clientes</button></div>
+<div class="note">Gera o arquivo <b>pedido.html</b> com os produtos salvos (foto, preço de venda direta e formulário). Coloque-o na pasta do app, suba de novo no Netlify e o cliente faz o pedido em <b>seu-endereço.netlify.app/pedido</b>. Se mudar preços ou produtos, gere de novo.</div>
+<textarea id="ta" style="display:none" readonly></textarea>
+<div class="note">Seus produtos ficam salvos neste navegador/aparelho. Para guardar no Google Drive: toque em “Copiar tabela”, abra uma planilha do Google Sheets e cole (Ctrl+V).</div>
+</div>
+
+<div class="card">
+<details>
+<summary>3. Configurações (energia, impressora, taxas, filamentos)</summary>
+<div class="grid" id="cfg" style="margin-top:12px"></div>
+<h2 style="margin-top:16px">Filamentos (preço do rolo de 1 kg)</h2>
+<div class="grid" id="filcfg"></div>
+<div class="row"><button class="sec sm" id="addfil">+ Adicionar filamento</button><button class="sec sm" id="reset">↺ Restaurar valores padrão</button></div>
+<div class="note"><b>Fontes dos valores padrão (consultadas em out/2026):</b><br>
+• Energia: R$ 0,89/kWh = tarifa residencial Celesc B1 (TE + TUSD com tributos) acima de 150 kWh, em faturas de maio/2026 com bandeira amarela, o que vale para Joinville. Bandeira vermelha soma cerca de R$ 0,06. A Celesc reajusta tarifas todo ano, confira na sua fatura.<br>
+• Bambu PLA Lite ~R$ 105 e PLA Basic ~R$ 150: preços da TerabyteShop (promoção e lista). Os demais filamentos são estimativas de mercado: ajuste ao que você paga.<br>
+• Impressora R$ 4.000 (A1 Combo), taxas de Mercado Livre/Shopee e consumo de 100 W são estimativas: confirme na sua realidade.</div>
+</details>
+</div>
+</div>
+
+<script>
+const DEF={cfg:{preco:4000,vida:5000,watts:100,kwh:0.89,mo:25,falha:8,margem:40,imp:4,ml:16,mlf:6.5,sp:20,spf:4,r90:false},
+fils:[{n:"PLA Bambu Lite",p:105},{n:"PLA Bambu Basic",p:150},{n:"PLA nacional (genérico)",p:90},{n:"PLA Silk / especial",p:130},{n:"PETG",p:120},{n:"TPU flexível",p:150}],prods:[]};
+const LAB={preco:["Preço da impressora (R$)",1],vida:["Vida útil (horas)",1],watts:["Consumo médio (W)",1],kwh:["Energia (R$/kWh)",.01],mo:["Sua hora de trabalho (R$)",1],falha:["Taxa de falha (%)",1],margem:["Margem desejada (%)",1],imp:["Imposto/reserva (%)",1],ml:["Taxa Mercado Livre (%)",1],mlf:["Tarifa fixa ML (R$, abaixo de R$ 79)",.1],sp:["Taxa Shopee (%)",1],spf:["Tarifa fixa Shopee (R$)",.1]};
+let S;
+try{S=JSON.parse(localStorage.getItem("ft3d")||"null")}catch(e){S=null}
+if(!S||!S.cfg||!S.fils)S=JSON.parse(JSON.stringify(DEF));
+const $=id=>document.getElementById(id),R=v=>"R$ "+(+v).toFixed(2).replace(".",",");
+function save(){try{localStorage.setItem("ft3d",JSON.stringify(S))}catch(e){alert("Memória do navegador cheia. Apague alguns produtos com foto.")}}
+const N=id=>Math.max(0,parseFloat($(id).value)||0);
+function calc(i,c){c=c||S.cfg;const f=S.fils[i.fil]||{p:0};
+const mat=i.g*f.p/1000,en=i.t*c.watts/1000*c.kwh,des=i.t*c.preco/c.vida,mo=i.pos/60*c.mo;
+const base=mat+en+des+mo,fal=base*c.falha/100,custo=base+fal+i.emb+i.ext;
+const mg=c.margem/100,im=c.imp/100;
+const rd=p=>c.r90?Math.ceil(p-0.9)+0.9:Math.ceil(p*10)/10;
+const dir=rd(custo/(1-mg-im));
+let ml=(custo+c.mlf)/(1-mg-im-c.ml/100);if(ml>=79)ml=custo/(1-mg-im-c.ml/100);ml=rd(ml);
+let sp=rd((custo+c.spf)/(1-mg-im-c.sp/100));
+const mlfee=ml>=79?0:c.mlf;
+return{mat,en,des,mo,fal,custo,dir,ml,sp,lucro:dir*(1-im)-custo,lml:ml*(1-im-c.ml/100)-mlfee-custo,lsp:sp*(1-im-c.sp/100)-c.spf-custo};}
+function inp(){return{fil:+$("fil").value,g:N("g"),t:N("h")+N("m")/60,pos:N("pos"),emb:N("emb"),ext:N("ext"),q:Math.max(1,N("qtd")||1)}}
+function render(){const i=inp(),r=calc(i),q=i.q;
+$("out").innerHTML=`<div class="p main"><small>💰 VENDA DIRETA (TikTok/WhatsApp/Pix)</small><b>${R(r.dir)}</b><small>lucro ${R(r.lucro)} por peça${q>1?" · lote: "+R(r.dir*q):""}</small></div>
+<div class="p"><small>🛒 MERCADO LIVRE</small><b>${R(r.ml)}</b><small>lucro ${R(r.lml)} por peça</small></div>
+<div class="p"><small>🛍️ SHOPEE</small><b>${R(r.sp)}</b><small>lucro ${R(r.lsp)} por peça</small></div>`;
+$("brk").innerHTML=`<span>Custo total: <b>${R(r.custo)}</b></span><span>Material: <b>${R(r.mat)}</b></span><span>Energia: <b>${R(r.en)}</b></span><span>Desgaste máquina: <b>${R(r.des)}</b></span><span>Mão de obra: <b>${R(r.mo)}</b></span><span>Falhas: <b>${R(r.fal)}</b></span><span>Embalagem+extras: <b>${R(i.emb+i.ext)}</b></span>`;}
+function selFil(){$("fil").innerHTML=S.fils.map((f,k)=>`<option value="${k}">${f.n} – ${R(f.p)}/kg</option>`).join("");}
+function cfgUI(){$("cfg").innerHTML=Object.keys(LAB).map(k=>`<div><label>${LAB[k][0]}</label><input data-k="${k}" type="number" min="0" step="${LAB[k][1]}" value="${S.cfg[k]}"></div>`).join("");
+$("filcfg").innerHTML=S.fils.map((f,k)=>`<div><label>Nome</label><input data-fn="${k}" value="${f.n}"><label style="margin-top:4px">Preço do rolo (R$)</label><input data-fp="${k}" type="number" min="0" step="1" value="${f.p}"><button class="sec sm" data-del="${k}" style="margin-top:4px">Remover</button></div>`).join("");
+$("r90").checked=S.cfg.r90;}
+function lista(){const L=$("lista");L.innerHTML=S.prods.map((p,k)=>`<tr><td>${p.img?`<img src="${p.img}" style="height:28px;border-radius:4px;vertical-align:middle;margin-right:6px">`:""}${p.nome}</td><td>${R(p.r.custo)}</td><td><b>${R(p.r.dir)}</b></td><td>${R(p.r.ml)}</td><td>${R(p.r.sp)}</td><td>${R(p.r.lucro)}</td><td><button class="sec sm" data-load="${k}">Abrir</button> <button class="sec sm" data-rm="${k}">✕</button></td></tr>`).join("");
+$("vazio").style.display=S.prods.length?"none":"block";}
+function all(){selFil();render();lista();}
+document.addEventListener("input",e=>{const t=e.target;
+if(t.dataset.k){S.cfg[t.dataset.k]=parseFloat(t.value)||0;save();render();}
+else if(t.dataset.fn){S.fils[t.dataset.fn].n=t.value;save();const v=$("fil").value;selFil();$("fil").value=v;}
+else if(t.dataset.fp){S.fils[t.dataset.fp].p=parseFloat(t.value)||0;save();const v=$("fil").value;selFil();$("fil").value=v;render();}
+else if(t.id==="r90"){S.cfg.r90=t.checked;save();render();}
+else if(t.closest(".card")&&!t.dataset.k)render();});
+document.addEventListener("click",e=>{const d=e.target.dataset;
+if(d.m){S.cfg.margem=+d.m;save();cfgUI();render();}
+if(d.del!==undefined&&S.fils.length>1){S.fils.splice(+d.del,1);save();cfgUI();all();}
+if(d.rm!==undefined){S.prods.splice(+d.rm,1);save();lista();}
+if(d.load!==undefined){const p=S.prods[+d.load];$("nome").value=p.nome;$("fil").value=Math.min(p.i.fil,S.fils.length-1);$("g").value=p.i.g;$("h").value=Math.floor(p.i.t);$("m").value=Math.round((p.i.t%1)*60);$("pos").value=p.i.pos;$("emb").value=p.i.emb;$("ext").value=p.i.ext;$("qtd").value=p.i.q;curImg=p.img||"";setPrev();render();scrollTo(0,0);}});
+$("salvar").onclick=()=>{const i=inp(),nome=$("nome").value.trim()||"Produto "+(S.prods.length+1);S.prods.push({nome,i,r:calc(i),img:curImg});save();lista();};
+$("limpar").onclick=()=>{curImg="";setPrev();["nome"].forEach(x=>$(x).value="");["g","h","m","pos","emb","ext"].forEach(x=>$(x).value=0);$("qtd").value=1;render();};
+$("addfil").onclick=()=>{S.fils.push({n:"Novo filamento",p:100});save();cfgUI();all();};
+$("reset").onclick=()=>{if(confirm("Restaurar todos os valores padrão? Os produtos salvos serão mantidos.")){const p=S.prods;S=JSON.parse(JSON.stringify(DEF));S.prods=p;save();cfgUI();all();}};
+$("apagar").onclick=()=>{if(S.prods.length&&confirm("Apagar todos os produtos salvos?")){S.prods=[];save();lista();}};
+$("copiar").onclick=async()=>{const rows=[["Produto","Custo","Venda direta","Mercado Livre","Shopee","Lucro direta"]].concat(S.prods.map(p=>[p.nome,p.r.custo,p.r.dir,p.r.ml,p.r.sp,p.r.lucro].map((v,k)=>k?(+v).toFixed(2).replace(".",","):v)));
+const tx=rows.map(r=>r.join("\t")).join("\n");let ok=false;try{await navigator.clipboard.writeText(tx);ok=true;}catch(e){}
+const ta=$("ta");ta.value=tx;ta.style.display=ok?"none":"block";if(!ok){ta.select();}else alert("Tabela copiada! Cole no Google Sheets.");};
+$("theme").onclick=()=>{const r=document.documentElement,dark=r.dataset.theme?r.dataset.theme==="dark":matchMedia("(prefers-color-scheme:dark)").matches;r.dataset.theme=dark?"light":"dark";};
+
+const CAT=[
+{n:"Chaveiro tag militar personalizado",c:"Militar",g:12,h:1,pos:10,emb:.8,ext:1.5},
+{n:"Suporte de display p/ patches e medalhas",c:"Militar",g:90,h:5.5,pos:15,emb:2,ext:0},
+{n:"Miniatura de blindado (display 1:72)",c:"Militar",g:60,h:4.5,pos:25,emb:2,ext:0},
+{n:"Porta-canetas camuflado",c:"Militar",g:70,h:4,pos:10,emb:2,ext:0},
+{n:"Suporte de parede p/ capacete (display)",c:"Militar",g:160,h:9,pos:15,emb:3,ext:0},
+{n:"Porta dog tag (display de mesa)",c:"Militar",g:25,h:1.8,pos:10,emb:1.2,ext:0},
+{n:"Brasão/emblema de parede",c:"Militar",g:50,h:3.5,pos:20,emb:1.5,ext:0},
+{n:"Chaveiro personalizado com nome",c:"Geral",g:8,h:.7,pos:10,emb:.8,ext:1.5},
+{n:"Suporte de celular articulado",c:"Geral",g:35,h:2.5,pos:10,emb:1.2,ext:0},
+{n:"Organizador de mesa",c:"Geral",g:110,h:6,pos:10,emb:2.5,ext:0},
+{n:"Suporte de fone de ouvido",c:"Geral",g:80,h:4.5,pos:10,emb:2,ext:0},
+{n:"Kit 4 porta-copos",c:"Geral",g:60,h:3,pos:10,emb:2,ext:0},
+{n:"Suporte de controle de videogame",c:"Geral",g:90,h:5,pos:10,emb:2,ext:0},
+{n:"Plaquinha de mesa com nome",c:"Geral",g:40,h:2.5,pos:10,emb:1.5,ext:0}];
+let CF="Todos";
+function catUI(){$("cat").innerHTML=CAT.map((p,k)=>CF==="Todos"||p.c===CF?`<button data-cat="${k}"><b>${p.n}</b><small>${p.c} · ~${p.g} g · ~${p.h} h</small></button>`:"").join("");}
+document.addEventListener("click",e=>{const d=e.target.closest("button,a");if(!d)return;const D=d.dataset;
+if(D.f){CF=D.f;catUI();}
+if(D.cat!==undefined){const p=CAT[+D.cat];$("nome").value=p.n;$("g").value=p.g;$("h").value=Math.floor(p.h);$("m").value=Math.round((p.h%1)*60);$("pos").value=p.pos;$("emb").value=p.emb;$("ext").value=p.ext;$("qtd").value=1;curImg="";setPrev();render();$("calc").scrollIntoView({behavior:"smooth"});}});
+function updWA(){const t=$("qmsg").value;let f=$("fone").value.replace(/\D/g,"");if(f.length>=10&&f.length<=11)f="55"+f;$("qwa").href="https://wa.me/"+f+"?text="+encodeURIComponent(t);}
+$("gerar").onclick=()=>{const i=inp(),r=calc(i),q=i.q,nome=$("nome").value.trim()||"Produto",cl=$("cli").value.trim(),cor=$("cor").value.trim(),pz=$("prazo").value||"3";
+const L=["Olá"+(cl?", "+cl:"")+"! Segue o seu orçamento da Forja Tática 3D:","","📦 "+nome,"Quantidade: "+q+(cor?"\nCor/observações: "+cor:""),"Valor unitário: "+R(r.dir),"💰 Total: "+R(r.dir*q),"⏱️ Prazo: "+pz+" dias úteis","","Pagamento via Pix. Posso confirmar o seu pedido?"];
+$("qmsg").value=L.join("\n");$("qmsg").style.display="block";$("qbtn").style.display="flex";updWA();};
+$("qmsg").addEventListener("input",updWA);$("fone").addEventListener("input",updWA);
+$("qcop").onclick=async()=>{const t=$("qmsg");try{await navigator.clipboard.writeText(t.value);alert("Texto copiado!");}catch(e){t.select();}};
+
+let curImg="";
+function setPrev(){const e=$("prev");e.src=curImg||"";e.style.display=curImg?"block":"none";}
+function loadImg(u){return new Promise(ok=>{const im=new Image();im.onload=()=>ok(im);im.src=u;});}
+$("foto").addEventListener("change",async e=>{const f=e.target.files[0];if(!f)return;const im=await loadImg(URL.createObjectURL(f));const m=520,k=Math.min(1,m/Math.max(im.width,im.height));const c=document.createElement("canvas");c.width=Math.round(im.width*k);c.height=Math.round(im.height*k);c.getContext("2d").drawImage(im,0,0,c.width,c.height);curImg=c.toDataURL("image/jpeg",.72);setPrev();});
+function wrap(x,t,cx,y,w,lh){let l="";for(const w2 of t.split(" ")){const tt=l?l+" "+w2:w2;if(x.measureText(tt).width>w&&l){x.fillText(l,cx,y);y+=lh;l=w2;}else l=tt;}x.fillText(l,cx,y);return y+lh;}
+let lastBlob=null;
+$("gimg").onclick=async()=>{const i=inp(),r=calc(i),q=i.q,nome=$("nome").value.trim()||"Produto",cl=$("cli").value.trim(),pz=$("prazo").value||"3",cor=$("cor").value.trim();
+const cv=document.createElement("canvas");cv.width=1080;cv.height=1350;const x=cv.getContext("2d");
+x.fillStyle="#1c211a";x.fillRect(0,0,1080,1350);x.fillStyle="#c9b57a";x.fillRect(0,0,1080,14);x.fillRect(0,1336,1080,14);
+x.textAlign="center";x.font="bold 54px Arial";x.fillText("FORJA TÁTICA 3D",540,100);
+x.font="28px Arial";x.fillStyle="#e8e2cc";x.fillText("ORÇAMENTO"+(cl?" · "+cl:""),540,148);
+let y=190;
+if(curImg){const im=await loadImg(curImg),k=Math.min(920/im.width,520/im.height),w=im.width*k,h=im.height*k;x.fillStyle="#2b3325";x.fillRect(80,y,920,h+0);x.drawImage(im,(1080-w)/2,y,w,h);y+=h+50;}else y+=40;
+x.font="bold 46px Arial";x.fillStyle="#e8e2cc";y=wrap(x,nome,540,y,900,56);
+x.font="32px Arial";x.fillStyle="#a8b09c";x.fillText("Quantidade: "+q+(cor?" · "+cor:""),540,y+10);y+=60;
+x.fillStyle="#e8e2cc";x.fillText("Valor unitário: "+R(r.dir),540,y);y+=100;
+x.font="bold 84px Arial";x.fillStyle="#c9b57a";x.fillText(R(r.dir*q),540,y);y+=64;
+x.font="30px Arial";x.fillStyle="#a8b09c";x.fillText("Prazo: "+pz+" dias úteis · Pagamento via Pix",540,y);
+const url=cv.toDataURL("image/png");$("qimg").src=url;$("qdl").href=url;$("qimgbox").style.display="block";cv.toBlob(b=>lastBlob=b,"image/png");};
+$("qshare").onclick=async()=>{if(!lastBlob)return;const f=new File([lastBlob],"orcamento.png",{type:"image/png"});
+if(navigator.canShare&&navigator.canShare({files:[f]})){try{await navigator.share({files:[f],text:"Orçamento Forja Tática 3D"});}catch(e){}}else alert("Este aparelho não compartilha direto daqui. Toque em “Baixar imagem” e envie pelo WhatsApp.");};
+const PAGE=`<!DOCTYPE html><html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Faça seu pedido – Forja Tática 3D</title><style>
+body{margin:0;background:#161a14;color:#ece7d2;font-family:Arial,sans-serif}.w{max-width:760px;margin:0 auto;padding:16px}h1{color:#c9b57a;font-size:24px;margin:8px 0}.sub{color:#a8b09c;font-size:14px}.g{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:12px;margin:16px 0}.c{background:#20261c;border:1px solid #39422f;border-radius:12px;padding:10px;text-align:center}.c img{width:100%;height:150px;object-fit:contain;background:#2b3325;border-radius:8px}.ph{height:150px;border-radius:8px;background:#2b3325;display:flex;align-items:center;justify-content:center;font-size:40px}.c b{display:block;margin:8px 0 2px}.pr{color:#8fd18f;font-size:22px;font-weight:700}input,textarea{width:100%;padding:10px;border-radius:8px;border:1px solid #39422f;background:#2b3325;color:#ece7d2;font-size:16px;font-family:inherit;box-sizing:border-box}label{display:block;font-size:13px;color:#a8b09c;margin:10px 0 3px}button{background:#c9b57a;color:#1c211a;border:0;border-radius:8px;padding:14px;font-size:17px;font-weight:700;width:100%;margin-top:14px;cursor:pointer}.q{width:90px!important;text-align:center;margin-top:6px}.tot{font-size:22px;color:#c9b57a;font-weight:700;margin-top:12px;text-align:right}
+</style></head><body><div class="w"><h1>⚙️ Forja Tática 3D</h1><div class="sub">Escolha os produtos, informe a quantidade e envie seu pedido. Entraremos em contato pelo WhatsApp para confirmar.</div><div class="g" id="g"></div>
+<form name="pedido" id="f" method="POST" data-netlify="true" netlify-honeypot="bot-field"><input type="hidden" name="form-name" value="pedido"><p hidden><label>Não preencha: <input name="bot-field"></label></p>
+<label>Seu nome</label><input name="nome" required><label>Seu WhatsApp (com DDD)</label><input name="whatsapp" type="tel" required><label>Cor, personalização e observações</label><textarea name="observacoes" rows="3"></textarea><input type="hidden" name="itens" id="it"><input type="hidden" name="total" id="tt"><div class="tot" id="tot">Total: R$ 0,00</div><button type="submit">Enviar pedido</button><div id="msg" class="sub" style="margin-top:10px"></div></form></div>
+<script>
+var P=__ITEMS__;var g=document.getElementById('g');function R(v){return 'R$ '+v.toFixed(2).replace('.',',')}
+P.forEach(function(p,k){var d=document.createElement('div');d.className='c';d.innerHTML=(p.i?'<img src="'+p.i+'">':'<div class="ph">⚙️</div>')+'<b></b><div class="pr">'+R(p.p)+'</div><input class="q" type="number" min="0" value="0" data-k="'+k+'">';d.querySelector('b').textContent=p.n;g.appendChild(d)});
+function calc(){var t=0,l=[];document.querySelectorAll('.q').forEach(function(e){var n=parseInt(e.value)||0;if(n>0){var p=P[e.dataset.k];t+=n*p.p;l.push(n+'x '+p.n)}});document.getElementById('it').value=l.join('; ');document.getElementById('tt').value=R(t);document.getElementById('tot').textContent='Total: '+R(t);return l.length}
+document.addEventListener('input',calc);
+document.getElementById('f').addEventListener('submit',function(e){e.preventDefault();var m=document.getElementById('msg');if(!calc()){m.textContent='Escolha ao menos um produto (quantidade maior que 0).';return}
+fetch('/',{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:new URLSearchParams(new FormData(e.target)).toString()}).then(function(r){if(!r.ok)throw 1;document.querySelector('.w').innerHTML='<h1>✅ Pedido enviado!</h1><div class="sub">Obrigado! Entraremos em contato pelo WhatsApp para confirmar.</div>'}).catch(function(){m.textContent='Não foi possível enviar. Tente de novo em instantes.'})});
+<\/script></body></html>`;
+$("gpag").onclick=()=>{if(!S.prods.length){alert("Salve ao menos um produto antes.");return;}
+const it=S.prods.map(p=>({n:p.nome,p:+(+p.r.dir).toFixed(2),i:p.img||""}));
+const h=PAGE.replace("__ITEMS__",()=>JSON.stringify(it).replace(/</g,"\\u003c"));
+const a=document.createElement("a");a.href=URL.createObjectURL(new Blob([h],{type:"text/html"}));a.download="pedido.html";document.body.appendChild(a);a.click();a.remove();};
+catUI();
+cfgUI();all();
+if("serviceWorker" in navigator&&location.protocol.startsWith("http"))navigator.serviceWorker.register("sw.js").catch(()=>{});
+</script>
+</body>
+</html>
